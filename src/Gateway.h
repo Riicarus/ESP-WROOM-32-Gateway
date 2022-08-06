@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-const std::string WiFi_report_dst_url = "http://192.168.43.18:9000/device/register";
+const std::string network_info_report_dst_url = "http://192.168.43.18:9000/device/register";
 const std::string unregister_report_dst_url = "http://192.168.43.18:9000/device/unregister";
 const int expireTime = 70000;
 std::map<std::string, long> device_heart_map;
@@ -95,6 +95,20 @@ void device_alive_check()
     }
 
     Serial.println("Device heart break check ends");
+}
+
+int getAliveDeviceNumber()
+{
+    std::map<std::string, long>::iterator itr = device_heart_map.begin();
+
+    int count = 0;
+    while (itr != device_heart_map.end())
+    {
+        count++;
+        itr++;
+    }
+
+    return count;
 }
 
 #endif

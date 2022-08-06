@@ -8,12 +8,12 @@
 #include <TM.h>
 #include <WiFi.h>
 
-const std::string WiFi_report_topic = "/device/WiFi/report";
+const std::string network_info_report_topic = "/device/network/report";
 
 /*
-    report WiFi information of json type to gateway, using mqtt
+    report network information of json type to mqtt server
  */
-void WiFi_info_report()
+void network_info_report()
 {
     DynamicJsonDocument doc(1024);
     doc["ip"] = WiFi.localIP();
@@ -23,7 +23,7 @@ void WiFi_info_report()
     std::string output;
     serializeJson(doc, output);
 
-    mqtt_publish(WiFi_report_topic, output);
+    mqtt_publish(network_info_report_topic, output);
 }
 
 /*
@@ -62,7 +62,7 @@ void WiFi_Connect(std::string name, std::string password, bool report)
     {
         if (mqtt_client.connected())
         {
-            WiFi_info_report();
+            network_info_report();
             return;
         }
         delay(2000);

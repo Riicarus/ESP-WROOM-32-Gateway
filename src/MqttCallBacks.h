@@ -18,12 +18,12 @@ void defaltCallback(char *topic, byte *payload, unsigned int length)
     Serial.println();
 }
 
-// report device info to server if gateway received WiFi report
-void WiFi_report_callback(char *topic, byte *payload, unsigned int length)
+// report device info to server if gateway received network info report
+void network_info_report_callback(char *topic, byte *payload, unsigned int length)
 {
-    // todo judge if it is WiFi report. if not, return.
+    // todo judge if it is network info report. if not, return.
     std::string topic_str = topic;
-    if (WiFi_report_topic.compare(topic_str) != 0)
+    if (network_info_report_topic.compare(topic_str) != 0)
     {
         return;
     }
@@ -34,7 +34,7 @@ void WiFi_report_callback(char *topic, byte *payload, unsigned int length)
     device_heart_handler(deviceId);
 
     HTTPClient http_client;
-    http_client.begin(WiFi_report_dst_url.c_str());
+    http_client.begin(network_info_report_dst_url.c_str());
     http_client.addHeader("Content-Type", "application/json");
 
     DynamicJsonDocument doc(1024);
@@ -80,7 +80,7 @@ void WiFi_report_callback(char *topic, byte *payload, unsigned int length)
 void customizedMqttCallback(char *topic, byte *payload, unsigned int length)
 {
     defaltCallback(topic, payload, length);
-    WiFi_report_callback(topic, payload, length);
+    network_info_report_callback(topic, payload, length);
 }
 
 #endif

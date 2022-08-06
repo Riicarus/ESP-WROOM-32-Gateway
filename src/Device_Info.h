@@ -3,11 +3,9 @@
 
 #include <string>
 
-const std::string deviceId = "6b143ad4-8573-4661-8642-b01dac8cc224";
-const std::string deviceName = "Sensor";
-const std::string productId = "e5cf6145-168f-4cd2-bd1e-6aeaf3df4f18";
-const int isGateWay = false;
-
-std::string currentPresetName = "default";
+const std::string deviceId = "7de13c36-6f69-4e84-83fc-b5c1d293cad3";
+const std::string deviceName = "ESP-WROOM-32-Gateway";
+const std::string productId = "6fe91b1f-0641-47ae-b189-57b3ff7b4d90";
+const bool isGateWay = true;
 
 #endif

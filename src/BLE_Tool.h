@@ -9,9 +9,9 @@
 #include <WiFi_Tool.h>
 #include <string>
 
-#define SERVICE_UUID "ef8a5ab3-9cc0-4786-b05b-46ad8f63b043"
-#define CHARACTERISTIC_UUID_RX "03c010b5-353d-4f6b-a876-dec7b57492d7"
-#define CHARACTERISTIC_UUID_TX "0a281e35-1a79-495f-b475-ef15c874943b"
+#define SERVICE_UUID "9c5d32e2-19c2-4533-873c-0bee10fb49cf"
+#define CHARACTERISTIC_UUID_RX "9e3f53ba-9901-4ff6-a2a5-1a136608ac1c"
+#define CHARACTERISTIC_UUID_TX "2cb3648f-cbcd-493e-a67b-a4e47c18d2e6"
 
 const std::string BLE2WiFi_Prefix = "*WiFi*:";
 
@@ -60,7 +60,7 @@ class MyCallbacks : public BLECharacteristicCallbacks
 void start_BLE()
 {
     // 创建一个 BLE 设备
-    BLEDevice::init("UART_BLE");
+    BLEDevice::init("ESP-WROOM-32-GATEWAY");
 
     // 创建一个 BLE 服务
     pServer = BLEDevice::createServer();
@@ -128,7 +128,7 @@ void BLE2WiFi(std::string value)
         std::string password = WiFi_Config.substr(index + 1);
 
         // report to gate way if this device is not gateway
-        WiFi_Connect(name, password, !isGateWay);
+        WiFi_Connect(name, password, true);
     }
 }
 

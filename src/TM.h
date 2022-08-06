@@ -6,7 +6,7 @@
 
 const std::string ntp_server = "pool.ntp.org";
 const long gmt_offset_sec = 8 * 3600;
-const int daylight_offset_sec = 0;
+const int daylight_offset_sec = 8 * 3600;
 
 void printLocalTime() {
     struct tm time_info;

@@ -1,0 +1,21 @@
+{
+    "files.associations": {
+        "*.module": "php",
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "iterator": "cpp",
+        "string_view": "cpp",
+        "algorithm": "cpp",
+        "memory": "cpp",
+        "initializer_list": "cpp",
+        "numeric": "cpp"
+    }
+}

@@ -6,11 +6,14 @@
 #include <TM.h>
 #include <map>
 #include <string>
+#include <DataUploader.h>
 
 const std::string network_info_report_dst_url = "http://192.168.43.18:9000/device/register";
 const std::string unregister_report_dst_url = "http://192.168.43.18:9000/device/unregister";
-const int expireTime = 70000;
+const int expireTime = 70; // unit is second
 std::map<std::string, long> device_heart_map;
+
+int getAliveDeviceNumber();
 
 // maintain device_heart_map, update device last heart time
 void device_heart_handler(std::string deviceId)
@@ -30,6 +33,16 @@ void device_heart_handler(std::string deviceId)
     {
         device_heart_map.insert(std::pair<std::string, long>(deviceId, now));
         Serial.printf("Newly received one device[%s] heart break, registered.\r\n", deviceId.c_str());
+
+        // report new alive device number to server
+        if (isWiFiConnected())
+        {
+            int number = getAliveDeviceNumber();
+            UPLOAD_DATA datas[1];
+            datas[0].key = "alive-device-number";
+            datas[0].value = std::to_string(number);
+            uploadData(datas, 1);
+        }
     }
 }
 
@@ -42,7 +55,7 @@ void device_alive_check()
     std::map<std::string, long>::iterator itr;
 
     // traverse all device
-    for (itr = device_heart_map.begin(); itr != device_heart_map.end(); itr++)
+    for (itr = device_heart_map.begin(); itr != device_heart_map.end();)
     {
         long time_interval = now - itr->second;
         if (time_interval >= expireTime)
@@ -55,6 +68,11 @@ void device_alive_check()
 
             std::string output;
             serializeJson(doc, output);
+
+            // remove from device_heart_map
+            itr = device_heart_map.erase(itr);
+
+            // each alive chech will follow by one alive number report, so here's no need to report
 
             HTTPClient http_client;
             http_client.begin(unregister_report_dst_url.c_str());
@@ -91,6 +109,8 @@ void device_alive_check()
             {
                 Serial.printf("HTTP POST Error: %s\r\n", http_client.errorToString(http_code).c_str());
             }
+        } else {
+            itr++;
         }
     }
 

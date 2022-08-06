@@ -44,7 +44,6 @@ class MyCallbacks : public BLECharacteristicCallbacks
 
         if (rxValue.length() > 0)
         {
-            //向串口输出收到的值
             Serial.print("RX Receive: ");
             for (int i = 0; i < rxValue.length(); i++)
             {
@@ -59,60 +58,53 @@ class MyCallbacks : public BLECharacteristicCallbacks
 
 void start_BLE()
 {
-    // 创建一个 BLE 设备
     BLEDevice::init("ESP-WROOM-32-GATEWAY");
 
-    // 创建一个 BLE 服务
     pServer = BLEDevice::createServer();
-    // 设置回调
+
     pServer->setCallbacks(new MyServerCallbacks());
     BLEService *pService = pServer->createService(SERVICE_UUID);
 
-    // 创建一个 BLE 特征
     pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
     pTxCharacteristic->addDescriptor(new BLE2902());
     BLECharacteristic *pRxCharacteristic =
         pService->createCharacteristic(CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
-    // 设置回调
+
     pRxCharacteristic->setCallbacks(new MyCallbacks());
 
-    // 开始服务
+
     pService->start();
-    // 开始广播
+
     pServer->getAdvertising()->start();
     Serial.println("BLE Waiting For New Connection and Message ... ");
 }
 
 void handle_BLE_service()
 {
-    // deviceConnected 已连接
     if (deviceConnected)
     {
-        // 设置要发送的值为1
         pTxCharacteristic->setValue(&txValue, 1);
-        // 广播
+
         pTxCharacteristic->notify();
-        // 指针地址自加1
+
         txValue++;
-        // 如果有太多包要发送，蓝牙会堵塞
+
         delay(2000);
     }
 
-    // disconnecting  断开连接
     if (!deviceConnected && oldDeviceConnected)
     {
-        // 留时间给蓝牙缓冲
+
         delay(500);
-        // 重新广播
+
         pServer->startAdvertising();
         Serial.println("BLE Start Adevertising ...");
         oldDeviceConnected = deviceConnected;
     }
 
-    // connecting  正在连接
+
     if (deviceConnected && !oldDeviceConnected)
     {
-        // do stuff here on connecting
         oldDeviceConnected = deviceConnected;
     }
 }

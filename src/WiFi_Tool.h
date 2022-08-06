@@ -37,7 +37,6 @@ void WiFi_Connect(std::string name, std::string password, bool report)
     int timer = 0;
     while ((WiFi.status() != WL_CONNECTED) && (timer <= 5000))
     {
-        //这里是阻塞程序，直到连接成功
         delay(500);
         timer += 300;
         Serial.print(".");

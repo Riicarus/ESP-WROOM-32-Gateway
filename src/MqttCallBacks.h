@@ -31,14 +31,15 @@ void network_info_report_callback(char *topic, byte *payload, unsigned int lengt
     time_t now;
     time(&now);
 
-    device_heart_handler(deviceId);
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, payload);
+
+    device_heart_handler(doc["deviceId"]);
 
     HTTPClient http_client;
     http_client.begin(network_info_report_dst_url.c_str());
     http_client.addHeader("Content-Type", "application/json");
 
-    DynamicJsonDocument doc(1024);
-    deserializeJson(doc, payload);
     doc["registerTime"] = now;
 
     std::string output;

@@ -10,8 +10,10 @@
 #include <Gateway.h>
 #include <MqttCallBacks.h>
 #include <WiFi_Tool.h>
+#include <map>
 #include <oled.h>
 #include <server_info_getter.h>
+#include <vector>
 
 // ------------------------ Network info report Task ------------------------//
 TaskHandle_t network_info_report_task_handle;
@@ -207,48 +209,66 @@ void OLED_task(void *OLED_task)
 {
     oled_setup();
 
+    std::vector<SENSOR_INFO> sensor_infos;
+
+    bool show_complete = true;
+
     while (1)
     {
         if (!isWiFiConnected())
         {
             oled_draw_whole_screen("NO WiFi ...");
+            vTaskSuspend(NULL);
         }
         else
         {
-            int alive_device_number = getAliveDeviceNumber();
-            std::string sensor_data_json = get_server_sensor_data();
-
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, sensor_data_json);
-
-            std::string light_sensor_data = doc["light"].as<std::string>();
-            std::string temperature_sensor_data = doc["temperature"].as<std::string>();
-            std::string humidity_sensor_data = doc["humidity"].as<std::string>();
-
-            std::string light;
-            if (light_sensor_data == "null")
+            if (show_complete)
             {
-                light = "light";
-            } else 
-            {
-                light = light_sensor_data == "0" ? "bright" : "dark";
+                sensor_infos = get_sensor_data();
+
+                if (!sensor_infos.empty())
+                {
+                    show_complete = false;
+                }
+                else {
+                    // update alive_device_number here to avoid being blocked too long
+                    int alive_device_number = getAliveDeviceNumber();
+                    std::string alive_device_number_msg = "alive: " + std::to_string(alive_device_number);
+                    oled_update_alive_device_number(alive_device_number_msg.c_str());
+
+                    vTaskSuspend(NULL);
+                }
             }
+            else
+            {
+                std::vector<SENSOR_INFO>::iterator sensor_info_itr = sensor_infos.begin();
+                while (sensor_info_itr != sensor_infos.end())
+                {
+                    oled_update_device_aliasName_cache((*sensor_info_itr).aliasName.c_str());
+                    std::map<std::string, std::string>::iterator property_itr = (*sensor_info_itr).properties.begin();
+                    while (property_itr != (*sensor_info_itr).properties.end())
+                    {
 
-            std::string TH;
-            if (temperature_sensor_data == "null" || humidity_sensor_data == "null")
-            {
-                TH = "temp/humi";
-            } else 
-            {
-                TH = temperature_sensor_data + "C/" + humidity_sensor_data + "%";
+                        std::string msg = property_itr->first + ": " + property_itr->second;
+                        oled_update_property_cache(msg.c_str());
+
+                        // update alive_device_number here to avoid being blocked too long
+                        int alive_device_number = getAliveDeviceNumber();
+                        std::string alive_device_number_msg = "alive: " + std::to_string(alive_device_number);
+                        oled_update_alive_device_number(alive_device_number_msg.c_str());
+
+                        vTaskSuspend(NULL);
+
+                        property_itr++;
+                    }
+
+                    oled_clean_property_cache();
+
+                    sensor_info_itr++;
+                }
+                show_complete = true;
             }
-
-            oled_update_alive_device_number(std::to_string(alive_device_number).c_str());
-            oled_update_light(light.c_str());
-            oled_update_TH(TH.c_str());
         }
-
-        vTaskSuspend(NULL);
     }
 }
 
@@ -260,9 +280,9 @@ void OLED_app_main(void)
 
     esp_timer_create(&start_OLED, &OLED_timer);
 
-    esp_timer_start_periodic(OLED_timer, 20 * 1000 * 1000);
+    esp_timer_start_periodic(OLED_timer, 3000 * 1000);
 
-    xTaskCreatePinnedToCore(OLED_task, "OLED_task", 4000, NULL, 1, &OLED_task_handle, 1);
+    xTaskCreatePinnedToCore(OLED_task, "OLED_task", 10000, NULL, 1, &OLED_task_handle, 1);
 }
 
 void OLED_timer_periodic(void *arg)

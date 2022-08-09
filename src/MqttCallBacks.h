@@ -41,6 +41,7 @@ void network_info_report_callback(char *topic, byte *payload, unsigned int lengt
     http_client.addHeader("Content-Type", "application/json");
 
     doc["registerTime"] = now;
+    doc["gatewayDeviceId"] = deviceId;
 
     std::string output;
     serializeJson(doc, output);

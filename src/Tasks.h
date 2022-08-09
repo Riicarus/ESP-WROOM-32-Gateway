@@ -10,6 +10,8 @@
 #include <Gateway.h>
 #include <MqttCallBacks.h>
 #include <WiFi_Tool.h>
+#include <oled.h>
+#include <server_info_getter.h>
 
 // ------------------------ Network info report Task ------------------------//
 TaskHandle_t network_info_report_task_handle;
@@ -161,7 +163,8 @@ void device_alive_check_task(void *device_alive_check_task)
     {
         device_alive_check();
 
-        if (isWiFiConnected()) {
+        if (isWiFiConnected())
+        {
             int number = getAliveDeviceNumber();
             UPLOAD_DATA datas[1];
             datas[0].key = "alive-device-number";
@@ -191,6 +194,80 @@ void device_alive_check_app_main(void)
 void device_alive_check_timer_periodic(void *arg)
 {
     vTaskResume(device_alive_check_task_handle);
+}
+
+// ------------------------ OLED Task ------------------------//
+TaskHandle_t OLED_task_handle;
+
+esp_timer_handle_t OLED_timer = 0;
+
+void OLED_timer_periodic(void *arg);
+
+void OLED_task(void *OLED_task)
+{
+    oled_setup();
+
+    while (1)
+    {
+        if (!isWiFiConnected())
+        {
+            oled_draw_whole_screen("NO WiFi ...");
+        }
+        else
+        {
+            int alive_device_number = getAliveDeviceNumber();
+            std::string sensor_data_json = get_server_sensor_data();
+
+            DynamicJsonDocument doc(1024);
+            deserializeJson(doc, sensor_data_json);
+
+            std::string light_sensor_data = doc["light"].as<std::string>();
+            std::string temperature_sensor_data = doc["temperature"].as<std::string>();
+            std::string humidity_sensor_data = doc["humidity"].as<std::string>();
+
+            std::string light;
+            if (light_sensor_data == "null")
+            {
+                light = "light";
+            } else 
+            {
+                light = light_sensor_data == "0" ? "bright" : "dark";
+            }
+
+            std::string TH;
+            if (temperature_sensor_data == "null" || humidity_sensor_data == "null")
+            {
+                TH = "temp/humi";
+            } else 
+            {
+                TH = temperature_sensor_data + "C/" + humidity_sensor_data + "%";
+            }
+
+            oled_update_alive_device_number(std::to_string(alive_device_number).c_str());
+            oled_update_light(light.c_str());
+            oled_update_TH(TH.c_str());
+        }
+
+        vTaskSuspend(NULL);
+    }
+}
+
+void OLED_app_main(void)
+{
+    esp_timer_create_args_t start_OLED = {.callback = &OLED_timer_periodic, .arg = NULL, .name = "OLEDPeriodicTimer"};
+
+    esp_timer_init();
+
+    esp_timer_create(&start_OLED, &OLED_timer);
+
+    esp_timer_start_periodic(OLED_timer, 20 * 1000 * 1000);
+
+    xTaskCreatePinnedToCore(OLED_task, "OLED_task", 4000, NULL, 1, &OLED_task_handle, 1);
+}
+
+void OLED_timer_periodic(void *arg)
+{
+    vTaskResume(OLED_task_handle);
 }
 
 #endif

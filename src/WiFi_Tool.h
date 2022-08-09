@@ -7,6 +7,7 @@
 #include <Mqtt_Tool.h>
 #include <TM.h>
 #include <WiFi.h>
+#include <oled.h>
 
 const std::string network_info_report_topic = "/device/network/report";
 
@@ -49,6 +50,7 @@ void WiFi_Connect(std::string name, std::string password, bool report)
         return;
     }
 
+    oled_update_notice("WiFi Connected!");
     Serial.println("WiFi Connected!");
     Serial.printf("IP Address: %s\r\n", WiFi.localIP().toString().c_str());
     Serial.printf("Mac Address: %s\r\n", WiFi.macAddress().c_str());
